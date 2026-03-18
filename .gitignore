@@ -1,5 +1,7 @@
 .idea
 node_modules/
+web/node_modules/
 src/HandRanks.dat
 dist/
+web/dist/
 .env

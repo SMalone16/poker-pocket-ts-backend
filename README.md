@@ -8,6 +8,13 @@ and can run thousands of rooms easily.
 
 This ts version replaces old js version https://github.com/norkator/poker-pocket-backend.
 
+## Repository layout
+
+- `src/` contains the existing TypeScript backend and websocket game server.
+- `web/` contains a new React + Vite browser client with routes for `/`, `/lobby`, `/room/:roomCode`, and `/profile`.
+- In development, the Vite dev server proxies `/ws` to the backend on port `8000` so the browser can always connect through the same public origin.
+- In production-style local builds, `npm run build` compiles both the backend and `web/dist`, and the backend serves the built SPA while exposing the websocket endpoint at `/ws`.
+
 ### Testing it out
 
 Current staging: https://pokerpocket-staging.nitramite.com  
@@ -41,9 +48,36 @@ Get following front end client:
     * Define env var `PW_SECRET=<value>` and get value using `npm run secret`
     * Define env var `PW_REFRESH_SECRET=<value>` and get value using `npm run secret`
 5. Run `npm install`
-6. Run `npm run start:dev` on development environment (uses nodemon)
-7. Backend is now running.
-8. Set up frontend https://github.com/norkator/poker-pocket-react-client
+6. Run `npm run dev` for the combined backend + web workflow, or use `npm run dev:server` and `npm run dev:web` separately.
+7. Open `http://localhost:5173` for the Vite client or `http://localhost:8000` after running `npm run build && npm run start`.
+8. Browser websocket connections are derived from `window.location`, so the frontend automatically uses `ws://<current-host>/ws` or `wss://<current-host>/ws`.
+
+## Single sendable GitHub Codespaces URL flow
+
+This repository now supports a one-link browser workflow in Codespaces:
+
+1. Start both processes inside the Codespace:
+   ```bash
+   npm install
+   npm run dev
+   ```
+2. In the **Ports** panel, make port `5173` public (or private if you only need your own access).
+3. Open the forwarded `5173` URL. That single URL serves the React app.
+4. The React app computes its websocket URL from `window.location` and connects to `/ws` on the same origin.
+5. Vite proxies `/ws` back to the backend process running internally on port `8000`, so you do **not** need to separately share port `8000`.
+
+Example flow:
+
+- Shared URL: `https://<codespace-name>-5173.app.github.dev`
+- Browser page load: `https://<codespace-name>-5173.app.github.dev/lobby`
+- Browser websocket target: `wss://<codespace-name>-5173.app.github.dev/ws`
+- Vite proxy target inside the Codespace: `ws://127.0.0.1:8000`
+
+## Web client notes
+
+- The browser app lives in `web/` and uses React Router for `/`, `/lobby`, `/room/:roomCode`, and `/profile`.
+- The Vite dev server is configured to proxy websocket traffic from `/ws` to `ws://127.0.0.1:8000`.
+- The backend can also serve `web/dist` directly, with SPA fallback routing and websocket upgrades handled on `/ws`.
 
 ### AI LLM Addon
 
